@@ -3,7 +3,7 @@ from enum import Enum
 from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr
 
-from src.auth_service.models import UserRole
+from models import UserRole
 
 
 class UserSchema(BaseModel):
@@ -19,6 +19,9 @@ class UserCreate(BaseModel):
     email: EmailStr
     password: str
     role: UserRole
+
+    name: str
+    phone: str
 
 
 class UserUpdate(BaseModel):

@@ -9,10 +9,13 @@ from jwt.exceptions import InvalidTokenError
 from pydantic import BaseModel
 from decouple import config
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 import argon2
 
-from ..models.models import User, UserPublic
-from ..database.database import SessionDep
+from models import User
+from schemas import UserPublic
+
+from database import get_session
 
 router = APIRouter()
 
@@ -67,17 +70,17 @@ def get_password_hash(password: str) -> str:
     return ph.hash(password)
 
 
-def get_user(session: SessionDep, email: str):
+async def get_user(session: AsyncSession, email: str):
     """ищет пользователя по email в базе данных"""
     statement = select(User).where(User.email == email)
-    user = session.exec(statement).first()
+    user = await session.execute(statement)
 
-    return user
+    return user.scalar_one_or_none()
 
 
-def authenticate_user(session: SessionDep, email: str, password: str):
+async def authenticate_user(session: AsyncSession, email: str, password: str):
     """аутентифицирует пользователя (проверяет email и password)"""
-    user = get_user(session, email)
+    user = await get_user(session, email)
 
     if not user:
         return False
@@ -103,7 +106,7 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     return encoded_jwt
 
 
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: SessionDep):
+async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], session: AsyncSession = Depends(get_session)):
     """
     получение текущего пользователя
     token: Annotated[str, Depends(oauth2_scheme)] - зависимость, которая извлекает token из header Authorization
@@ -122,39 +125,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], sessio
         token_data = TokenData(email=email)
     except InvalidTokenError:
         raise credentials_exception
-    user = get_user(session, email=token_data.email)
+    user = await get_user(session, email=token_data.email)
     if user is None:
         raise credentials_exception
     return user
-
-
-@router.post("/token")
-async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestFormWithEmail, Depends()],
-                                 session: SessionDep) -> Token:
-    """эндпоинт для получения токена"""
-    user = authenticate_user(session, form_data.email, form_data.password)  # аутентификация пользователя
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect email or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email}, expires_delta=access_token_expires
-    )
-    return Token(access_token=access_token, token_type="bearer")
-
-
-@router.get("/users/me/", response_model=UserPublic)
-async def read_users_me(
-        current_user: Annotated[User, Depends(get_current_user)]
-):
-    return current_user
-
-
-@router.get("/users/me/items/")
-async def read_own_items(
-        current_user: Annotated[User, Depends(get_current_user)],
-):
-    return [{"item_id": "Foo", "owner": current_user.email}]

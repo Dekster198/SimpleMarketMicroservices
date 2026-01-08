@@ -1,10 +1,10 @@
 import uuid
 import enum
 from datetime import datetime
-from sqlalchemy import text, String, Integer, Float, ForeignKey
+from sqlalchemy import text, String, Float, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.database import Base
+from database import Base
 
 
 class UserRole(enum.Enum):

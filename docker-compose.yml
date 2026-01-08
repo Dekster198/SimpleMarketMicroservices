@@ -15,9 +15,13 @@ services:
       - backend
 
   auth:
-    build: ./auth_service
+    container_name: auth_service
+    build:
+      context: ./src/auth_service
     env_file:
-      - ./.env
+      - .env
+    ports:
+      - "8000:8000"
     environment:
       - DATABASE_URL=${DATABASE_URL_AUTH}
       - JWT_SECRET=${JWT_SECRET}
@@ -27,6 +31,7 @@ services:
       - backend
 
   products:
+    container_name: products_service
     build: ./product_service
     env_file:
       - ./.env
@@ -39,6 +44,7 @@ services:
       - backend
 
   orders:
+    container_name: orders_service
     build: ./order_service
     env_file:
       - ./.env
@@ -51,41 +57,44 @@ services:
       - backend
 
   auth-db:
-    image: postgres
+    container_name: auth_db
+    image: postgres:18
     env_file:
       - ./.env
     environment:
       - POSTGRES_DB=${AUTH_DB}
       - POSTGRES_USER=${AUTH_USER}
-      - POSTGRES_PASSWORD=${AUTH_PASSWORD}
+      - POSTGRES_PASSWORD=${AUTH_PASS}
     volumes:
-      - auth_data:/var/lib/postgresql/data
+      - auth_data:/var/lib/postgresql
     networks:
       - backend
 
   product-db:
-      image: postgres
-      env_file:
-        - ./.env
-      environment:
-        - POSTGRES_DB=${PRODUCT_DB}
-        - POSTGRES_USER=${PRODUCT_USER}
-        - POSTGRES_PASSWORD=${PRODUCT_PASSWORD}
-      volumes:
-        - product_data:/var/lib/postgresql/data
-      networks:
-        - backend
+    container_name: product_db
+    image: postgres:18
+    env_file:
+      - ./.env
+    environment:
+      - POSTGRES_DB=${PRODUCT_DB}
+      - POSTGRES_USER=${PRODUCT_USER}
+      - POSTGRES_PASSWORD=${PRODUCT_PASS}
+    volumes:
+      - product_data:/var/lib/postgresql
+    networks:
+      - backend
 
   order-db:
-    image: postgres
+    container_name: order_db
+    image: postgres:18
     env_file:
       - ./.env
     environment:
       - POSTGRES_DB=${ORDER_DB}
       - POSTGRES_USER=${ORDER_USER}
-      - POSTGRES_PASSWORD=${ORDER_PASSWORD}
+      - POSTGRES_PASSWORD=${ORDER_PASS}
     volumes:
-      - order_data:/var/lib/postgresql/data
+      - order_data:/var/lib/postgresql
     networks:
       - backend
 
@@ -110,6 +119,19 @@ services:
       - kafka_data:/kafka
     networks:
       - backend
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin_web
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    networks:
+      - backend
+    depends_on:
+      - auth-db
 
 volumes:
   auth_data:
