@@ -6,10 +6,11 @@ from src.auth_service.schemas import UserPublic, UserCreate, UserUpdate
 from src.auth_service.services.user_service import UserService
 from src.auth_service.database import get_session
 
+
 router = APIRouter(prefix='/users', tags=['users'])
 
 
-@router.post('/', response_model=UserPublic)
+@router.post('/', response_model=UserPublic, status_code=status.HTTP_201_CREATED)
 async def create_user(data: UserCreate, session: AsyncSession = Depends(get_session)):
     try:
         user = await UserService.create_user(
@@ -52,7 +53,7 @@ async def update_user(user_id: int, data: UserUpdate, session: AsyncSession = De
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
 
-    updated_user = await UserService.update_user(session, user, **data.dict())
+    updated_user = await UserService.update_user(session, user, **data.model_dump())
 
     return updated_user
 

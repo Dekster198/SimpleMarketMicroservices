@@ -1,13 +1,11 @@
 from uuid import UUID
-from enum import Enum
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, EmailStr
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 from models import UserRole
 
 
-class UserSchema(BaseModel):
-    id: UUID
+class UserBase(BaseModel):
     email: EmailStr
     role: UserRole
     created_at: datetime
@@ -17,11 +15,11 @@ class UserSchema(BaseModel):
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(min_length=8, max_length=128)
     role: UserRole
 
-    name: str
-    phone: str
+    name: str = Field(min_length=2, max_length=50)
+    phone: str = Field(min_length=11, max_length=11)
 
 
 class UserUpdate(BaseModel):
@@ -35,18 +33,17 @@ class UserPublic(BaseModel):
     role: UserRole
 
 
-class SellerSchema(BaseModel):
-    id: UUID
-    name: str
-    phone: str
+class SellerBase(BaseModel):
+    name: str = Field(min_length=2, max_length=50)
+    phone: str = Field(min_length=11, max_length=11)
     rating: float
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class SellerCreate(BaseModel):
-    name: str
-    phone: str
+    name: str = Field(min_length=2, max_length=50)
+    phone: str = Field(min_length=11, max_length=11)
 
 
 class SellerUpdate(BaseModel):
@@ -61,17 +58,16 @@ class SellerPublic(BaseModel):
     rating: float
 
 
-class BuyerSchema(BaseModel):
-    id: UUID
-    name: str
-    phone: str
+class BuyerBase(BaseModel):
+    name: str = Field(min_length=2, max_length=50)
+    phone: str = Field(min_length=11, max_length=11)
 
     model_config = ConfigDict(from_attributes=True)
 
 
 class BuyerCreate(BaseModel):
-    name: str
-    phone: str
+    name: str = Field(min_length=2, max_length=50)
+    phone: str = Field(min_length=11, max_length=11)
 
 
 class BuyerUpdate(BaseModel):
