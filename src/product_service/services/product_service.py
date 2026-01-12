@@ -5,8 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from models import Product
 
-from models import Seller
-
 
 class ProductService:
     @staticmethod
@@ -18,13 +16,6 @@ class ProductService:
             quantity: int,
             seller_id: int
     ) -> Product:
-        stmt_exists_seller = select(Seller).where(Seller.id == seller_id)
-        exists_seller = await session.execute(stmt_exists_seller)
-        exists_seller = exists_seller.scalar_one_or_none()
-
-        if not exists_seller:
-            raise ValueError('Seller does not exists')
-
         product = Product(
             title=title,
             description=description,
@@ -64,7 +55,7 @@ class ProductService:
         ALLOWED_FIELDS = {"title", "description", "price", "quantity"}
 
         for attr, value in data.items():
-            if value in ALLOWED_FIELDS and value is not None:
+            if attr in ALLOWED_FIELDS and value is not None:
                 setattr(product, attr, value)
 
         await session.commit()

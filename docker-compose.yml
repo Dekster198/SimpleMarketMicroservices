@@ -22,6 +22,8 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    volumes:
+      - ./src/auth_service/alembic/versions:/app/alembic/versions
     environment:
       - DATABASE_URL=${DATABASE_URL_AUTH}
       - JWT_SECRET=${JWT_SECRET}
@@ -40,6 +42,8 @@ services:
       - ./.env
     environment:
       - DATABASE_URL=${DATABASE_URL_PRODUCT}
+    volumes:
+      - ./src/product_service/alembic/versions:/app/alembic/versions
     depends_on:
       - product-db
       - kafka
@@ -53,6 +57,8 @@ services:
       - ./.env
     environment:
       - DATABASE_URL=${DATABASE_URL_ORDER}
+    volumes:
+      - ./src/order_service/alembic/versions:/app/alembic/versions
     depends_on:
       - order-db
       - kafka

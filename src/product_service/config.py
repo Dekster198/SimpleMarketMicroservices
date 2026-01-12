@@ -8,6 +8,10 @@ class Settings(BaseSettings):
     PRODUCT_PASS: str
     PRODUCT_DB: str
 
+    KAFKA_BOOTSTRAP_SERVERS: str
+    KAFKA_ORDER_TOPIC: str = "order.created"
+    KAFKA_GROUP_ID: str = "product-service"
+
     @property
     def DATABASE_URL_asyncpg(self) -> str:
         return (
